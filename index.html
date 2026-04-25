@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Budget Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="script.js" defer></script>
+
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">
+    <h1>Budget<span>Flow</span></h1>
+    <p>Personal Finance Tracker</p>
+  </div>
+  <span class="nav-section">Main</span>
+  <a class="nav-item active" onclick="showPage('overview',this)">
+    <span class="nav-icon">📊</span> Overview
+  </a>
+  <a class="nav-item" onclick="showPage('transactions',this)">
+    <span class="nav-icon">📋</span> Transactions
+  </a>
+  <a class="nav-item" onclick="showPage('categories',this)">
+    <span class="nav-icon">🏷️</span> Categories
+  </a>
+  <a class="nav-item" onclick="showPage('insights',this)">
+    <span class="nav-icon">💡</span> Insights
+  </a>
+  <span class="nav-section">Actions</span>
+  <a class="nav-item" onclick="showPage('add',this)">
+    <span class="nav-icon">➕</span> Add Transaction
+  </a>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">Overview</div>
+    <div class="topbar-right" id="month-filter">
+      <div class="month-pill active" onclick="setMonth('all',this)">All</div>
+      <div class="month-pill" onclick="setMonth('January',this)">Jan</div>
+      <div class="month-pill" onclick="setMonth('February',this)">Feb</div>
+      <div class="month-pill" onclick="setMonth('March',this)">Mar</div>
+      <div class="month-pill" onclick="setMonth('April',this)">Apr</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- OVERVIEW PAGE -->
+    <div id="page-overview" class="page active">
+      <div class="stats-grid" id="stats-grid"></div>
+      <div class="charts-row">
+        <div class="chart-card">
+          <h3>Monthly Revenue vs Expenditure</h3>
+          <canvas id="monthlyChart" height="220"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Expenditure by Category</h3>
+          <div class="donut-wrap">
+            <div class="donut-canvas-wrap">
+              <canvas id="donutChart" width="160" height="160"></canvas>
+              <div class="donut-center"><div class="dc-val" id="donut-center-val"></div><div class="dc-lbl">Total Spent</div></div>
+            </div>
+            <div class="donut-legend" id="donut-legend"></div>
+          </div>
+        </div>
+      </div>
+      <div class="overview-bottom">
+        <div class="chart-card">
+          <h3>Weekly Spending Breakdown</h3>
+          <canvas id="weeklyChart" height="220"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Recent Transactions</h3>
+          <div id="recent-list" style="margin-top:4px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSACTIONS PAGE -->
+    <div id="page-transactions" class="page">
+      <div class="table-card">
+        <div class="table-header">
+          <h3>All Transactions <span id="tx-count" style="font-size:12px;color:var(--text3);font-weight:400;"></span></h3>
+          <div class="table-controls">
+            <input class="search-box" type="text" placeholder="Search..." id="tx-search" oninput="renderTransactions()">
+            <select class="select-box" id="tx-cat-filter" onchange="renderTransactions()">
+              <option value="">All Categories</option>
+            </select>
+            <select class="select-box" id="tx-type-filter" onchange="renderTransactions()">
+              <option value="">All Types</option>
+              <option value="Expenditure">Expenditure</option>
+              <option value="Revenue">Revenue</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr>
+              <th>Date</th><th>Category</th><th>Description</th>
+              <th>Expenditure</th><th>Revenue</th><th>Tx Cost</th><th>Payment</th>
+            </tr></thead>
+            <tbody id="tx-tbody"></tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <div class="page-info" id="page-info"></div>
+          <div class="page-btns" id="page-btns"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CATEGORIES PAGE -->
+    <div id="page-categories" class="page">
+      <div class="category-grid" id="cat-grid"></div>
+      <div class="table-card">
+        <div class="table-header"><h3>Category Detail</h3>
+          <select class="select-box" id="cat-detail-select" onchange="renderCatDetail()">
+          </select>
+        </div>
+        <div class="table-scroll" style="max-height:400px;">
+          <table>
+            <thead><tr><th>Date</th><th>Description</th><th>Expenditure</th><th>Revenue</th><th>Payment</th></tr></thead>
+            <tbody id="cat-detail-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- INSIGHTS PAGE -->
+    <div id="page-insights" class="page">
+      <div class="monthly-compare" id="monthly-compare"></div>
+      <div class="insights-row">
+        <div class="insight-card">
+          <h3>🏆 Top Spending Categories</h3>
+          <div id="top-spend-list"></div>
+        </div>
+        <div class="insight-card">
+          <h3>💰 Top Revenue Sources</h3>
+          <div id="top-rev-list"></div>
+        </div>
+      </div>
+      <div style="margin-top:20px;" class="insights-row">
+        <div class="insight-card">
+          <h3>📅 Daily Averages</h3>
+          <div id="daily-avg-list"></div>
+        </div>
+        <div class="insight-card">
+          <h3>📈 Month-over-Month Change</h3>
+          <div id="mom-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADD TRANSACTION -->
+    <div id="page-add" class="page">
+      <div class="form-card">
+        <h3>➕ Add New Transaction</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Date</label>
+            <input class="form-input" type="date" id="add-date" value="2026-04-25">
+          </div>
+          <div class="form-group">
+            <label>Month</label>
+            <select class="form-input" id="add-month">
+              <option>January</option><option>February</option><option>March</option><option selected>April</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select class="form-input" id="add-category">
+              <option>Bills</option><option>Clothings</option><option>Entertainment</option>
+              <option>Equity Account</option><option>Food</option><option>Friends &amp; Family</option>
+              <option>Home Appliance</option><option>Loans</option><option>Paypal Services</option>
+              <option>Savings</option><option>Shopping</option><option>Transport</option><option>Withdrawal</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <input class="form-input" type="text" id="add-desc" placeholder="e.g. Lunch at restaurant">
+          </div>
+          <div class="form-group">
+            <label>Expenditure (KSh)</label>
+            <input class="form-input" type="number" id="add-exp" placeholder="0" min="0">
+          </div>
+          <div class="form-group">
+            <label>Revenue (KSh)</label>
+            <input class="form-input" type="number" id="add-rev" placeholder="0" min="0">
+          </div>
+          <div class="form-group">
+            <label>Transaction Cost (KSh)</label>
+            <input class="form-input" type="number" id="add-tc" placeholder="0" min="0">
+          </div>
+          <div class="form-group">
+            <label>Payment Method</label>
+            <select class="form-input" id="add-pm">
+              <option>Mpesa</option><option>Cash</option><option>Equity</option><option>Bank</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="addTransaction()">Save Transaction</button>
+          <button class="btn btn-secondary" onclick="clearForm()">Clear</button>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><h3>Recently Added</h3></div>
+        <table>
+          <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Expenditure</th><th>Revenue</th><th>Action</th></tr></thead>
+          <tbody id="added-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+
+<div class="toast" id="toast"></div>
+</body>
+</html>
